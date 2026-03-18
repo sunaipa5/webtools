@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="tr">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Webtools</title>
+        <link rel="stylesheet" href="index.css" />
+    </head>
+    <body>
+        <h1>Webtools</h1>
+
+        <section id="body">
+            <web-tool
+                link="/iconpress"
+                title="Iconpress"
+                desc="Simple icon generator"
+            ></web-tool>
+            <web-tool
+                link="/svg-opt"
+                title="SVG Optimizer"
+                desc="Minify vector graphics"
+            ></web-tool>
+            <web-tool
+                link="/base64"
+                title="Base64 Encoder"
+                desc="Encode and decode strings"
+            ></web-tool>
+        </section>
+
+        <script>
+            class WebTool extends HTMLElement {
+                connectedCallback() {
+                    const link = this.getAttribute("link") || "#";
+                    const title = this.getAttribute("title") || "Title";
+                    const desc = this.getAttribute("desc") || "Description";
+
+                    this.innerHTML = `
+                    <a href="${link}" class="web-tool-link">
+                        <div class="service">
+                            <span class="title">${title}</span>
+                            <span class="description">${desc}</span>
+                        </div>
+                    </a>
+                `;
+                }
+            }
+            customElements.define("web-tool", WebTool);
+        </script>
+    </body>
+</html>

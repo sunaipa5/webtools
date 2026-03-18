@@ -1,0 +1,92 @@
+:root {
+    --bg-color: #1e1e1e;
+    --card-bg: #2d2d2d;
+    --card-hover-bg: #383838;
+    --card-active-bg: #404040;
+    --text-main: #ffffff;
+    --text-muted: #b3b3b3;
+    --radius-standard: 12px;
+    --transition: all 0.2s ease-out;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    font-family:
+        "Inter",
+        "Cantarell",
+        system-ui,
+        -apple-system,
+        sans-serif;
+    margin: 0;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1 {
+    font-weight: 800;
+    font-size: 2.5rem;
+    margin-bottom: 40px;
+    color: var(--text-main);
+}
+
+#body {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    width: 100%;
+    max-width: 1000px;
+}
+
+web-tool {
+    display: block;
+}
+
+.web-tool-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.service {
+    background-color: var(--card-bg);
+    padding: 20px;
+    border-radius: var(--radius-standard);
+
+    border: 1px solid rgba(255, 255, 255, 0.03);
+
+    transition: var(--transition);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.service:hover {
+    background-color: var(--card-hover-bg);
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.07);
+}
+
+/* Tıklanınca (Basılı tutunca) */
+.service:active {
+    background-color: var(--card-active-bg);
+    transform: translateY(0px);
+}
+
+.service .title {
+    display: block;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-main);
+}
+
+.service .description {
+    display: block;
+    font-weight: 400;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}

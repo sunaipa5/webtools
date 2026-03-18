@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SVG Optimizer - Simple Webtools</title>
+        <link rel="stylesheet" href="../index.css" />
+        <link rel="stylesheet" href="../style.css" />
+    </head>
+    <body>
+        <div class="container">
+            <a href="/" class="back-link">← Back to Tools</a>
+            <header>
+                <h1>SVG Optimizer</h1>
+                <p class="subtitle">
+                    Minify and clean up your SVG code instantly.
+                </p>
+            </header>
+
+            <div class="card">
+                <textarea
+                    id="svgInput"
+                    placeholder="Paste your raw SVG code here..."
+                ></textarea>
+                <div class="btn-group">
+                    <button class="btn-accent" onclick="optimize()">
+                        Optimize SVG
+                    </button>
+                    <button class="btn-secondary" onclick="copy()">
+                        Copy Result
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function optimize() {
+                const area = document.getElementById("svgInput");
+                let val = area.value;
+                if (!val) return;
+                area.value = val
+                    .replace(/<!--[\s\S]*?-->/g, "")
+                    .replace(/<\?xml[\s\S]*?\?>/g, "")
+                    .replace(/>\s+</g, "><")
+                    .trim();
+            }
+            function copy() {
+                const el = document.getElementById("svgInput");
+                el.select();
+                document.execCommand("copy");
+            }
+        </script>
+    </body>
+</html>

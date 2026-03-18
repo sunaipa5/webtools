@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Base64 Converter - Simple Webtools</title>
+        <link rel="stylesheet" href="../style.css" />
+    </head>
+    <body>
+        <div class="container">
+            <a href="/" class="back-link">← Back to Tools</a>
+            <header>
+                <h1>Base64 Converter</h1>
+                <p class="subtitle">
+                    Convert text to Base64 and vice versa in real-time.
+                </p>
+            </header>
+
+            <div class="grid-dual">
+                <div class="card">
+                    <textarea
+                        id="textIn"
+                        placeholder="Plain Text..."
+                        resize="none"
+                        oninput="toB64()"
+                    ></textarea>
+                </div>
+                <div class="arrow-icon">⇄</div>
+                <div class="card">
+                    <textarea
+                        id="b64In"
+                        placeholder="Base64..."
+                        oninput="fromB64()"
+                    ></textarea>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; text-align: center">
+                <button
+                    class="btn-secondary"
+                    onclick="
+                        document
+                            .querySelectorAll('textarea')
+                            .forEach((t) => (t.value = ''))
+                    "
+                >
+                    Clear All
+                </button>
+            </div>
+        </div>
+
+        <script>
+            const tIn = document.getElementById("textIn");
+            const bIn = document.getElementById("b64In");
+
+            function toB64() {
+                try {
+                    bIn.value = btoa(unescape(encodeURIComponent(tIn.value)));
+                } catch (e) {
+                    bIn.value = "Error encoding...";
+                }
+            }
+            function fromB64() {
+                try {
+                    tIn.value = decodeURIComponent(escape(atob(bIn.value)));
+                } catch (e) {
+                    tIn.value = "Invalid Base64...";
+                }
+            }
+        </script>
+    </body>
+</html>
