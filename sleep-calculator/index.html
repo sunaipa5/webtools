@@ -2,184 +2,122 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
         <title>Sleep Calculator - Simple Webtools</title>
+        <link rel="stylesheet" href="../style.css" />
         <style>
-            :root {
-                --bg-color: #1e1e1e;
-                --card-bg: #2d2d2d;
-                --entry-bg: #383838;
-                --text-main: #ffffff;
-                --text-muted: #b3b3b3;
-                --adwaita-blue: #3584e4;
-                --accent: var(--adwaita-blue);
+            .main-picker {
+                margin-bottom: 25px;
+                text-align: center;
+                background: var(--card-bg);
+                padding: 20px;
+                border-radius: 16px;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                overflow: hidden;
             }
 
-            @supports (color: color-mix(in srgb, AccentColor, transparent)) {
-                :root {
-                    --accent: AccentColor;
-                }
+            .main-picker label {
+                display: block;
+                margin-bottom: 12px;
+                font-weight: 700;
+                color: var(--accent);
+                font-size: 0.9rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
             }
 
-            * {
+            input[type="time"] {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 100%;
+                max-width: 240px;
+                background: var(--entry-bg);
+                border: 2px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                color: #fff;
+                padding: 10px 5px;
+                font-size: 1.6rem;
+                font-family: inherit;
+                text-align: center;
+                outline: none;
+                display: inline-block;
                 box-sizing: border-box;
             }
 
-            body {
-                background-color: var(--bg-color);
-                color: var(--text-main);
-                font-family:
-                    "Inter",
-                    "Cantarell",
-                    system-ui,
-                    -apple-system,
-                    sans-serif;
-                margin: 0;
-                padding: 40px 20px;
-                line-height: 1.5;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .container {
-                width: 100%;
-                max-width: 800px;
-            }
-
-            header {
-                text-align: left;
-                margin-bottom: 32px;
-            }
-
-            h1 {
-                font-size: 2.2rem;
-                font-weight: 800;
-                margin: 0 0 8px 0;
-                letter-spacing: -1px;
-            }
-
-            p.subtitle {
-                color: var(--text-muted);
-                margin: 0;
-            }
-
-            .back-link {
-                display: inline-block;
-                text-decoration: none;
-                color: var(--accent);
-                font-weight: 600;
-                margin-bottom: 20px;
-                font-size: 0.9rem;
+            input[type="time"]::-webkit-calendar-picker-indicator {
+                background: transparent;
+                bottom: 0;
+                color: transparent;
+                cursor: pointer;
+                height: auto;
+                left: 0;
+                position: absolute;
+                right: 0;
+                top: 0;
+                width: auto;
             }
 
             .grid-dual {
                 display: grid;
-                grid-template-columns: 1fr 40px 1fr;
-                align-items: stretch;
-                gap: 12px;
-            }
-
-            .card {
-                background: var(--card-bg);
-                border-radius: 12px;
-                padding: 24px;
-                border: 1px solid rgba(255, 255, 255, 0.05);
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-                display: flex;
-                flex-direction: column;
-                gap: 16px;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
             }
 
             .card h2 {
-                font-size: 1.1rem;
-                margin: 0;
-                color: var(--accent);
+                font-size: 0.75rem;
+                margin-bottom: 15px;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                text-align: center;
             }
 
-            input[type="time"] {
-                width: 100%;
-                background: var(--entry-bg);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 8px;
-                color: #fff;
-                padding: 12px;
-                font-family: inherit;
-                font-size: 1.1rem;
-                outline: none;
-                transition: border-color 0.2s;
-            }
-
-            input[type="time"]:focus {
-                border-color: var(--accent);
-            }
-
-            .results {
+            .results-list {
                 display: flex;
                 flex-direction: column;
                 gap: 8px;
-                margin-top: 10px;
             }
 
-            .time-chip {
-                background: rgba(255, 255, 255, 0.03);
-                padding: 10px;
-                border-radius: 6px;
+            .time-slot {
+                background: var(--entry-bg);
+                padding: 12px;
+                border-radius: 10px;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                border-left: 3px solid transparent;
+                border: 1px solid rgba(255, 255, 255, 0.03);
             }
 
-            .time-chip.recommended {
-                border-left-color: var(--accent);
-                background: rgba(53, 132, 228, 0.1);
+            .time-slot.best {
+                border: 1px solid var(--accent);
+                background: rgba(53, 132, 228, 0.08);
             }
 
             .time-val {
-                font-weight: 700;
-                font-size: 1rem;
+                font-size: 1.1rem;
+                font-weight: 800;
+                color: #fff;
             }
 
-            .time-desc {
-                font-size: 0.8rem;
+            .time-meta {
+                font-size: 0.65rem;
                 color: var(--text-muted);
-            }
-
-            .arrow-icon {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: var(--text-muted);
-                font-size: 24px;
-                opacity: 0.5;
+                text-align: right;
             }
 
             @media (max-width: 768px) {
                 .grid-dual {
                     grid-template-columns: 1fr;
                 }
-                .arrow-icon {
-                    transform: rotate(90deg);
-                    padding: 10px;
+                .main-picker {
+                    padding: 15px;
                 }
-            }
-
-            .btn-secondary {
-                background-color: #454545;
-                color: white;
-                padding: 12px 24px;
-                border-radius: 8px;
-                border: none;
-                font-weight: 700;
-                cursor: pointer;
-                transition: all 0.2s;
-                margin-top: 24px;
-            }
-
-            button:hover {
-                filter: brightness(1.1);
-                transform: translateY(-1px);
+                input[type="time"] {
+                    max-width: 100%;
+                }
             }
         </style>
     </head>
@@ -188,53 +126,49 @@
             <a href="/" class="back-link">← Back to Tools</a>
             <header>
                 <h1>Sleep Calculator</h1>
-                <p class="subtitle">
-                    Optimize your sleep cycles for a better morning.
-                </p>
+                <p class="subtitle">Optimize your sleep cycles.</p>
             </header>
 
-            <div class="grid-dual">
-                <!-- I want to wake up at... -->
-                <div class="card">
-                    <h2>I want to wake up at:</h2>
-                    <input
-                        type="time"
-                        id="wakeTime"
-                        value="07:00"
-                        oninput="calcBedtime()"
-                    />
-                    <div id="bedtimeResults" class="results"></div>
-                </div>
-
-                <div class="arrow-icon">⇄</div>
-
-                <!-- I go to bed now... -->
-                <div class="card">
-                    <h2>If I go to bed now:</h2>
-                    <div style="margin-bottom: 8px">
-                        <button
-                            class="btn-secondary"
-                            style="width: 100%; margin: 0"
-                            onclick="calcWakeUpNow()"
-                        >
-                            Calculate Wake-up Times
-                        </button>
-                    </div>
-                    <div id="wakeupResults" class="results"></div>
+            <div class="main-picker">
+                <label for="baseTime">Select Time</label>
+                <div style="position: relative">
+                    <input type="time" id="baseTime" oninput="calculateAll()" />
                 </div>
             </div>
 
-            <div style="text-align: center">
-                <button class="btn-secondary" onclick="clearAll()">
-                    Clear All
+            <div class="grid-dual">
+                <div class="card">
+                    <h2>If you sleep now:</h2>
+                    <div id="ifSleepNow" class="results-list"></div>
+                </div>
+                <div class="card">
+                    <h2>To wake up at:</h2>
+                    <div id="ifWakeThen" class="results-list"></div>
+                </div>
+            </div>
+
+            <div style="margin-top: 25px; text-align: center">
+                <button class="btn-secondary" onclick="resetToNow()">
+                    Current Time
                 </button>
             </div>
         </div>
 
         <script>
-            const wakeInput = document.getElementById("wakeTime");
-            const bedtimeResults = document.getElementById("bedtimeResults");
-            const wakeupResults = document.getElementById("wakeupResults");
+            const timeInput = document.getElementById("baseTime");
+            const sleepList = document.getElementById("ifSleepNow");
+            const wakeList = document.getElementById("ifWakeThen");
+
+            window.onload = resetToNow;
+
+            function resetToNow() {
+                const now = new Date();
+                timeInput.value =
+                    now.getHours().toString().padStart(2, "0") +
+                    ":" +
+                    now.getMinutes().toString().padStart(2, "0");
+                calculateAll();
+            }
 
             function formatTime(date) {
                 return date.toLocaleTimeString([], {
@@ -244,57 +178,49 @@
                 });
             }
 
-            function calcBedtime() {
-                const [hrs, mins] = wakeInput.value.split(":");
-                const wakeDate = new Date();
-                wakeDate.setHours(hrs, mins, 0);
+            function calculateAll() {
+                const val = timeInput.value;
+                if (!val) return;
 
-                let html = "";
-                // 6, 5, and 4 cycles (90 min each) + 15 mins to fall asleep
+                const [hrs, mins] = val.split(":");
+                const baseDate = new Date();
+                baseDate.setHours(parseInt(hrs), parseInt(mins), 0);
+
+                const buffer = 15;
                 const cycles = [6, 5, 4];
 
+                let sleepHtml = "";
                 cycles.forEach((c) => {
                     const d = new Date(
-                        wakeDate.getTime() - c * 90 * 60000 - 15 * 60000,
+                        baseDate.getTime() + c * 90 * 60000 + buffer * 60000,
                     );
-                    const recommended = c === 6 || c === 5 ? "recommended" : "";
-                    html += `
-                        <div class="time-chip ${recommended}">
+                    sleepHtml += `
+                        <div class="time-slot ${c >= 5 ? "best" : ""}">
                             <span class="time-val">${formatTime(d)}</span>
-                            <span class="time-desc">${c} Cycles (${c * 1.5}h)</span>
+                            <div class="time-meta">
+                                <div>${c} Cycles</div>
+                                <div>${(c * 1.5).toFixed(1)}h</div>
+                            </div>
                         </div>`;
                 });
-                bedtimeResults.innerHTML = html;
-            }
+                sleepList.innerHTML = sleepHtml;
 
-            function calcWakeUpNow() {
-                const now = new Date();
-                const fallAsleepTime = 15; // Average minutes to fall asleep
-                let html = "";
-                const cycles = [4, 5, 6];
-
+                let wakeHtml = "";
                 cycles.forEach((c) => {
                     const d = new Date(
-                        now.getTime() + c * 90 * 60000 + fallAsleepTime * 60000,
+                        baseDate.getTime() - c * 90 * 60000 - buffer * 60000,
                     );
-                    const recommended = c === 6 || c === 5 ? "recommended" : "";
-                    html += `
-                        <div class="time-chip ${recommended}">
+                    wakeHtml += `
+                        <div class="time-slot ${c >= 5 ? "best" : ""}">
                             <span class="time-val">${formatTime(d)}</span>
-                            <span class="time-desc">${c} Cycles (${c * 1.5}h)</span>
+                            <div class="time-meta">
+                                <div>${c} Cycles</div>
+                                <div>${(c * 1.5).toFixed(1)}h</div>
+                            </div>
                         </div>`;
                 });
-                wakeupResults.innerHTML = html;
+                wakeList.innerHTML = wakeHtml;
             }
-
-            function clearAll() {
-                bedtimeResults.innerHTML = "";
-                wakeupResults.innerHTML = "";
-                wakeInput.value = "07:00";
-            }
-
-            // Initial calculation
-            calcBedtime();
         </script>
     </body>
 </html>
