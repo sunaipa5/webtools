@@ -2,9 +2,77 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Base64 Converter - Simple Webtools</title>
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
+        <link rel="icon" type="image/webp" href="/favicon.webp" />
+        <title>Base64 Converter</title>
         <link rel="stylesheet" href="../style.css" />
+        <style>
+            .grid-dual {
+                display: grid;
+                grid-template-columns: 1fr 60px 1fr;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .swap-btn {
+                background: var(--entry-bg);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                color: var(--accent);
+                font-size: 24px;
+                cursor: pointer;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s ease;
+                user-select: none;
+                margin: 0 auto;
+            }
+
+            .swap-btn:hover {
+                background: var(--card-bg);
+                transform: scale(1.1);
+                border-color: var(--accent);
+            }
+
+            .swap-btn:active {
+                transform: scale(0.9);
+            }
+
+            textarea {
+                width: 100%;
+                min-height: 250px;
+                box-sizing: border-box;
+                -webkit-appearance: none;
+            }
+
+            .label-text {
+                font-size: 0.8rem;
+                color: var(--text-muted);
+                margin-bottom: 8px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                display: block;
+            }
+
+            @media (max-width: 768px) {
+                .grid-dual {
+                    grid-template-columns: 1fr;
+                }
+                .swap-btn {
+                    transform: rotate(90deg);
+                    margin: 10px auto;
+                }
+                .swap-btn:hover {
+                    transform: rotate(90deg) scale(1.1);
+                }
+            }
+        </style>
     </head>
     <body>
         <div class="container">
@@ -17,55 +85,114 @@
             </header>
 
             <div class="grid-dual">
+                <!-- Left/Top Card -->
                 <div class="card">
+                    <span class="label-text" id="labelLeft">Plain Text</span>
                     <textarea
-                        id="textIn"
-                        placeholder="Plain Text..."
-                        resize="none"
-                        oninput="toB64()"
+                        id="inputLeft"
+                        placeholder="Type here..."
+                        oninput="convert()"
                     ></textarea>
                 </div>
-                <div class="arrow-icon">⇄</div>
+
+                <!-- Swap Button -->
+                <button
+                    class="swap-btn"
+                    onclick="swap()"
+                    title="Swap Direction"
+                >
+                    ⇄
+                </button>
+
+                <!-- Right/Bottom Card -->
                 <div class="card">
+                    <span class="label-text" id="labelRight">Base64</span>
                     <textarea
-                        id="b64In"
-                        placeholder="Base64..."
-                        oninput="fromB64()"
+                        id="inputRight"
+                        placeholder="Result will appear here..."
+                        oninput="convertReverse()"
                     ></textarea>
                 </div>
             </div>
 
             <div style="margin-top: 20px; text-align: center">
-                <button
-                    class="btn-secondary"
-                    onclick="
-                        document
-                            .querySelectorAll('textarea')
-                            .forEach((t) => (t.value = ''))
-                    "
-                >
+                <button class="btn-secondary" onclick="clearAll()">
                     Clear All
                 </button>
             </div>
         </div>
 
         <script>
-            const tIn = document.getElementById("textIn");
-            const bIn = document.getElementById("b64In");
+            let isTextToBase64 = true;
+            const leftIn = document.getElementById("inputLeft");
+            const rightIn = document.getElementById("inputRight");
+            const labelL = document.getElementById("labelLeft");
+            const labelR = document.getElementById("labelRight");
 
-            function toB64() {
-                try {
-                    bIn.value = btoa(unescape(encodeURIComponent(tIn.value)));
-                } catch (e) {
-                    bIn.value = "Error encoding...";
+            function convert() {
+                if (isTextToBase64) {
+                    try {
+                        rightIn.value = btoa(
+                            unescape(encodeURIComponent(leftIn.value)),
+                        );
+                    } catch (e) {
+                        rightIn.value = "Error encoding...";
+                    }
+                } else {
+                    try {
+                        rightIn.value = decodeURIComponent(
+                            escape(atob(leftIn.value)),
+                        );
+                    } catch (e) {
+                        rightIn.value = "Invalid Base64...";
+                    }
                 }
             }
-            function fromB64() {
-                try {
-                    tIn.value = decodeURIComponent(escape(atob(bIn.value)));
-                } catch (e) {
-                    tIn.value = "Invalid Base64...";
+
+            function convertReverse() {
+                if (isTextToBase64) {
+                    try {
+                        leftIn.value = decodeURIComponent(
+                            escape(atob(rightIn.value)),
+                        );
+                    } catch (e) {
+                        leftIn.value = "Invalid Base64...";
+                    }
+                } else {
+                    try {
+                        leftIn.value = btoa(
+                            unescape(encodeURIComponent(rightIn.value)),
+                        );
+                    } catch (e) {
+                        leftIn.value = "Error encoding...";
+                    }
                 }
+            }
+
+            function swap() {
+                isTextToBase64 = !isTextToBase64;
+
+                const tempLabel = labelL.innerText;
+                labelL.innerText = labelR.innerText;
+                labelR.innerText = tempLabel;
+
+                const tempVal = leftIn.value;
+                leftIn.value = rightIn.value;
+                rightIn.value = tempVal;
+
+                // Update placeholders
+                if (isTextToBase64) {
+                    leftIn.placeholder = "Plain Text...";
+                    rightIn.placeholder = "Base64...";
+                } else {
+                    leftIn.placeholder = "Base64...";
+                    rightIn.placeholder = "Plain Text...";
+                }
+            }
+
+            function clearAll() {
+                leftIn.value = "";
+                rightIn.value = "";
             }
         </script>
     </body>

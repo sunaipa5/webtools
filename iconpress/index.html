@@ -2,18 +2,29 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <title>Adwaita Icon Forge</title>
+        <link rel="icon" type="image/webp" href="/favicon.webp" />
+        <title>Iconpress</title>
         <style>
             :root {
-                --bg-color: #1a1a1a;
                 --card-bg: #242424;
-                --accent: AccentColor;
+                --accent: #3584e4;
                 --text: #ffffff;
                 --border: #333333;
                 --input-bg: #111111;
             }
 
-            /* Desktop App Feel: Prevent selection and scrolling */
+            @supports (color: color-mix(in srgb, AccentColor, transparent)) {
+                :root {
+                    --accent: AccentColor;
+                }
+            }
+
+            @media screen and (max-width: 0px) {
+                :root {
+                    --accent: var(--adwaita-blue);
+                }
+            }
+
             * {
                 user-select: none;
                 -webkit-user-drag: none;
@@ -27,17 +38,16 @@
                 margin: 0;
                 height: 100vh;
                 display: flex;
-                overflow: hidden; /* No scroll for desktop app feel */
+                overflow: hidden;
             }
 
             .app-container {
                 display: grid;
-                grid-template-columns: 1fr 340px; /* Sidebar layout */
+                grid-template-columns: 1fr 340px;
                 width: 100%;
                 height: 100%;
             }
 
-            /* Left side: Canvas preview */
             .preview-box {
                 display: flex;
                 flex-direction: column;
@@ -56,12 +66,10 @@
                 background-size: 20px 20px;
                 border-radius: 12px;
                 box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-                max-width: 90%;
-                max-height: 80%;
-                object-fit: contain;
+                max-width: 70%;
+                max-height: 60%;
             }
 
-            /* Right side: Sidebar controls */
             .controls {
                 background: var(--card-bg);
                 border-left: 1px solid var(--border);
@@ -69,7 +77,7 @@
                 display: flex;
                 flex-direction: column;
                 gap: 16px;
-                overflow-y: auto; /* Scroll only settings if needed */
+                overflow-y: auto;
             }
 
             .control-group {
@@ -95,13 +103,18 @@
             .num-input,
             .hex-input {
                 background: var(--input-bg);
-                border: 1px solid var(--accent);
+                border: 1px solid var(--border);
                 color: var(--text);
                 border-radius: 4px;
-                padding: 2px 6px;
+                padding: 4px 8px;
                 font-family: monospace;
                 font-size: 0.8rem;
                 outline: none;
+            }
+
+            .num-input:focus,
+            .hex-input:focus {
+                border-color: var(--accent);
             }
 
             input[type="color"] {
@@ -111,12 +124,10 @@
                 cursor: pointer;
                 background: var(--input-bg);
                 border-radius: 6px;
-                outline: none;
             }
 
             input[type="range"] {
                 accent-color: var(--accent);
-                cursor: pointer;
             }
 
             textarea {
@@ -129,29 +140,35 @@
                 font-family: monospace;
                 font-size: 10px;
                 min-height: 60px;
+                user-select: text;
                 outline: none;
-                user-select: text; /* Allow paste */
+            }
+
+            textarea:focus {
+                border: 1px solid var(--accent);
             }
 
             .file-upload {
                 background: #2d2d2d;
-                padding: 10px;
-                border-radius: 6px;
+                padding: 25px;
+                border-radius: 8px;
                 text-align: center;
-                border: 1px dashed #444;
+                border: 2px dashed #444;
+                position: relative;
                 cursor: pointer;
-                font-size: 0.8rem;
+                transition: all 0.2s ease;
             }
 
-            .btn-primary {
-                background-color: var(--accent);
-                color: white;
-                border: none;
-                padding: 12px;
-                border-radius: 8px;
-                font-weight: bold;
-                cursor: pointer;
-                margin-top: auto; /* Push to bottom */
+            .file-upload.drag-over {
+                background: rgba(53, 132, 228, 0.1);
+                border-color: var(--accent);
+                color: var(--accent);
+                transform: scale(1.02);
+            }
+
+            .file-upload span {
+                font-size: 0.8rem;
+                pointer-events: none;
             }
 
             .btn-secondary {
@@ -159,16 +176,31 @@
                 border: 1px solid #3d3d3d;
                 color: #ccc;
                 padding: 8px;
-                border-radius: 8px;
+                border-radius: 6px;
                 cursor: pointer;
-                font-size: 0.8rem;
+                font-size: 0.75rem;
+            }
+
+            .btn-secondary:hover {
+                background: #3d3d3d;
+                border-color: var(--accent);
+            }
+
+            .custom-export {
+                display: flex;
+                gap: 5px;
+                margin-top: 10px;
+            }
+
+            .custom-export input {
+                flex: 1;
             }
         </style>
     </head>
     <body>
         <div class="app-container">
             <div class="preview-box">
-                <canvas id="iconCanvas" width="512" height="512"></canvas>
+                <canvas id="iconCanvas" width="1024" height="1024"></canvas>
                 <div
                     style="
                         margin-top: 20px;
@@ -178,7 +210,7 @@
                         letter-spacing: 2px;
                     "
                 >
-                    Icon Press
+                    ICONPRESS
                 </div>
             </div>
 
@@ -198,7 +230,7 @@
 
                 <div class="control-group">
                     <div class="label-row">
-                        <label>Icon Color</label>
+                        <label>Icon Tint</label>
                         <input
                             type="text"
                             id="fgHex"
@@ -230,87 +262,150 @@
                             class="num-input"
                         />
                     </div>
-                    <input type="range" id="symbolSize" min="10" max="90" />
+                    <input type="range" id="symbolSize" min="5" max="100" />
                 </div>
 
                 <div class="control-group">
-                    <label>SVG Entry</label>
-                    <div class="file-upload">
-                        <span>Pick File</span>
+                    <label>Input Image (SVG, PNG, JPG)</label>
+                    <div class="file-upload" id="dropZone">
+                        <span id="uploadText">Click or Drag & Drop</span>
                         <input
                             type="file"
-                            id="svgInput"
-                            accept=".svg"
+                            id="imageInput"
+                            accept=".svg,.png,.jpg,.jpeg"
                             style="
                                 position: absolute;
                                 opacity: 0;
-                                width: 100%;
-                                left: 0;
+                                inset: 0;
                                 cursor: pointer;
                             "
                         />
                     </div>
+
+                    <button
+                        class="btn-secondary"
+                        onclick="clearImage()"
+                        style="
+                            width: 100%;
+                            margin-top: 5px;
+                            color: #ff4444;
+                            border-color: #ff444422;
+                        "
+                    >
+                        Remove Image
+                    </button>
+
                     <textarea
                         id="svgPaste"
-                        placeholder="Paste <svg>..."
+                        placeholder="Or paste <svg> here..."
                     ></textarea>
                 </div>
-                <div class="label-row">
-                    <label>Export</label>
-                </div>
-                <div
-                    style="
-                        display: grid;
-                        grid-template-columns: 1fr 1fr;
-                        gap: 8px;
-                    "
-                >
-                    <button class="btn-secondary" onclick="downloadIcon(64)">
-                        64px
-                    </button>
-                    <button class="btn-secondary" onclick="downloadIcon(128)">
-                        128px
-                    </button>
-                    <button class="btn-secondary" onclick="downloadIcon(256)">
-                        256px
-                    </button>
-                    <button class="btn-secondary" onclick="downloadIcon(512)">
-                        512px
-                    </button>
-                    <button class="btn-secondary" onclick="downloadIcon(1024)">
-                        1024px
-                    </button>
-                </div>
-                <div
-                    style="
-                        display: grid;
-                        grid-template-columns: 1fr 1fr;
-                        gap: 8px;
-                        margin-top: 10px;
-                    "
-                >
-                    <button
-                        class="btn-secondary"
-                        onclick="exportAndroid()"
-                        style="border-color: #a4c639; color: #a4c639"
+
+                <div class="control-group">
+                    <label>Export Format</label>
+                    <select
+                        id="exportFormat"
+                        class="num-input"
+                        style="width: 100%; height: 32px"
                     >
-                        Android ZIP
-                    </button>
-                    <button
-                        class="btn-secondary"
-                        onclick="exportIOS()"
-                        style="border-color: #ff3b30; color: #ff3b30"
+                        <option value="image/png" selected>
+                            PNG (Lossless)
+                        </option>
+                        <option value="image/jpeg">JPG (Smaller)</option>
+                        <option value="image/webp">WebP (Modern)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>Quick Export</label>
+                    <div
+                        style="
+                            display: grid;
+                            grid-template-columns: repeat(3, 1fr);
+                            gap: 5px;
+                        "
                     >
-                        iOS ZIP
-                    </button>
+                        <button
+                            class="btn-secondary"
+                            onclick="downloadIcon(64)"
+                        >
+                            64px
+                        </button>
+                        <button
+                            class="btn-secondary"
+                            onclick="downloadIcon(128)"
+                        >
+                            128px
+                        </button>
+                        <button
+                            class="btn-secondary"
+                            onclick="downloadIcon(256)"
+                        >
+                            256px
+                        </button>
+                        <button
+                            class="btn-secondary"
+                            onclick="downloadIcon(512)"
+                        >
+                            512px
+                        </button>
+                        <button
+                            class="btn-secondary"
+                            onclick="exportAndroid()"
+                            style="color: #a4c639"
+                        >
+                            Android ZIP
+                        </button>
+                        <button
+                            class="btn-secondary"
+                            onclick="exportIOS()"
+                            style="color: #a40900"
+                        >
+                            iOS ZIP
+                        </button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Custom Export (Max 4096px)</label>
+                    <div class="custom-export">
+                        <input
+                            type="number"
+                            id="customPx"
+                            class="num-input"
+                            placeholder="Size"
+                            min="1"
+                            max="4096"
+                            value="1024"
+                        />
+                        <button
+                            class="btn-secondary"
+                            onclick="
+                                downloadIcon(
+                                    document.getElementById('customPx').value,
+                                )
+                            "
+                            style="
+                                border-color: var(--accent);
+                                color: white;
+                                background: var(--accent);
+                            "
+                        >
+                            Export
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
+
         <script src="./jszip.min.js"></script>
         <script>
             const canvas = document.getElementById("iconCanvas");
             const ctx = canvas.getContext("2d");
-            let loadedSvg = null;
+            let loadedImg = null;
+            let isSVG = false;
+            const dropZone = document.getElementById("dropZone");
+            const uploadText = document.getElementById("uploadText");
 
             const el = {
                 bgColor: document.getElementById("bgColor"),
@@ -321,37 +416,109 @@
                 roundingNum: document.getElementById("roundingNum"),
                 symbolSize: document.getElementById("symbolSize"),
                 symbolSizeNum: document.getElementById("symbolSizeNum"),
-                svgInput: document.getElementById("svgInput"),
+                imageInput: document.getElementById("imageInput"),
                 svgPaste: document.getElementById("svgPaste"),
             };
 
-            // Initialize Defaults / Load LocalStorage
-            const settings = JSON.parse(
-                localStorage.getItem("adwaita-forge-cfg"),
-            ) || {
-                bg: "#3584e4",
-                fg: "#ffffff",
-                round: 24,
-                size: 55,
-            };
-
             const init = () => {
+                const getActualHex = (colorStr) => {
+                    if (colorStr.startsWith("#")) return colorStr;
+
+                    const temp = document.createElement("div");
+                    temp.style.color = colorStr;
+                    temp.style.display = "none";
+                    document.body.appendChild(temp);
+
+                    const rgb = getComputedStyle(temp).color;
+                    document.body.removeChild(temp);
+
+                    const match = rgb.match(/\d+/g);
+                    if (!match) return "#3584e4";
+
+                    return (
+                        "#" +
+                        match
+                            .slice(0, 3)
+                            .map((x) => {
+                                const hex = parseInt(x).toString(16);
+                                return hex.length === 1 ? "0" + hex : hex;
+                            })
+                            .join("")
+                    );
+                };
+
+                const rawAccent = getComputedStyle(document.documentElement)
+                    .getPropertyValue("--accent")
+                    .trim();
+                const systemHex = getActualHex(rawAccent);
+
+                const settings = JSON.parse(
+                    localStorage.getItem("iconpress-cfg"),
+                ) || {
+                    bg: systemHex,
+                    fg: "#ffffff",
+                    round: 24,
+                    size: 60,
+                };
+
                 el.bgColor.value = el.bgHex.value = settings.bg;
                 el.fgColor.value = el.fgHex.value = settings.fg;
                 el.rounding.value = el.roundingNum.value = settings.round;
                 el.symbolSize.value = el.symbolSizeNum.value = settings.size;
+
+                syncColors(el.bgColor, el.bgHex);
+                syncColors(el.fgColor, el.fgHex);
+                syncRanges(el.rounding, el.roundingNum);
+                syncRanges(el.symbolSize, el.symbolSizeNum);
             };
 
-            // Sync Helper
+            //------ DRAG & DROP ------
+            dropZone.addEventListener("dragover", (e) => {
+                e.preventDefault();
+                dropZone.classList.add("drag-over");
+                uploadText.innerText = "Drop it now!";
+            });
+
+            ["dragleave", "drop"].forEach((type) => {
+                dropZone.addEventListener(type, () => {
+                    dropZone.classList.remove("drag-over");
+                });
+            });
+
+            dropZone.addEventListener("drop", (e) => {
+                e.preventDefault();
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    el.imageInput.files = e.dataTransfer.files;
+                    el.imageInput.dispatchEvent(new Event("change"));
+                }
+            });
+
+            el.imageInput.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    el.svgPaste.value = "";
+
+                    uploadText.innerText = "File: " + file.name;
+
+                    isSVG = file.type === "image/svg+xml";
+                    const reader = new FileReader();
+                    reader.onload = (ev) => loadImageFromSrc(ev.target.result);
+                    reader.readAsDataURL(file);
+                } else {
+                    uploadText.innerText = "Click or Drag & Drop";
+                }
+            });
+
             const syncColors = (picker, hex) => {
                 picker.addEventListener("input", () => {
                     hex.value = picker.value;
-                    update();
+                    draw();
                 });
                 hex.addEventListener("input", () => {
                     if (/^#[0-9A-F]{6}$/i.test(hex.value)) {
                         picker.value = hex.value;
-                        update();
+                        draw();
                     }
                 });
             };
@@ -359,162 +526,192 @@
             const syncRanges = (slider, num) => {
                 slider.addEventListener("input", () => {
                     num.value = slider.value;
-                    update();
+                    draw();
                 });
                 num.addEventListener("input", () => {
                     slider.value = num.value;
-                    update();
+                    draw();
                 });
             };
 
-            syncColors(el.bgColor, el.bgHex);
-            syncColors(el.fgColor, el.fgHex);
-            syncRanges(el.rounding, el.roundingNum);
-            syncRanges(el.symbolSize, el.symbolSizeNum);
-
-            // Load Logic
-            el.svgInput.addEventListener("change", (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => loadSvgFromSrc(ev.target.result);
-                    reader.readAsDataURL(file);
-                }
-            });
-
-            el.svgPaste.addEventListener("input", (e) => {
-                const code = e.target.value.trim();
-                if (code.includes("<svg")) {
-                    const blob = new Blob([code], {
-                        type: "image/svg+xml;charset=utf-8",
-                    });
-                    loadSvgFromSrc(URL.createObjectURL(blob));
-                }
-            });
-
-            function loadSvgFromSrc(src) {
+            function loadImageFromSrc(src) {
                 const img = new Image();
                 img.onload = () => {
-                    loadedSvg = img;
+                    loadedImg = img;
                     draw();
                 };
                 img.src = src;
             }
 
-            function update() {
-                localStorage.setItem(
-                    "adwaita-forge-cfg",
-                    JSON.stringify({
-                        bg: el.bgColor.value,
-                        fg: el.fgColor.value,
-                        round: el.rounding.value,
-                        size: el.symbolSize.value,
-                    }),
-                );
-                draw();
-            }
-
-            function draw() {
-                const size = canvas.width;
-                const bgCol = el.bgColor.value;
-                const fgCol = el.fgColor.value;
-                const roundPct = el.rounding.value;
-                const symPct = el.symbolSize.value;
-
-                ctx.clearRect(0, 0, size, size);
-                ctx.shadowColor = "rgba(0,0,0,0.5)";
-                ctx.shadowBlur = 35;
-                ctx.shadowOffsetY = 15;
-
-                const gradient = ctx.createLinearGradient(0, 0, 0, size);
-                gradient.addColorStop(0, bgCol);
-                gradient.addColorStop(1, shadeColor(bgCol, -18));
-
-                ctx.fillStyle = gradient;
-                const margin = 40;
-                const drawSize = size - margin * 2;
-                const radius = (drawSize * roundPct) / 100;
-
-                ctx.beginPath();
-                ctx.roundRect(margin, margin, drawSize, drawSize, radius);
-                ctx.fill();
-
-                ctx.shadowColor = "transparent";
-                ctx.shadowBlur = 0;
-
-                if (loadedSvg) {
-                    const sSize = drawSize * (symPct / 100);
-                    const offset = (size - sSize) / 2;
-
-                    // Smart Tinting: Render icon with chosen color
-                    const offscreen = document.createElement("canvas");
-                    offscreen.width = size;
-                    offscreen.height = size;
-                    const oCtx = offscreen.getContext("2d");
-
-                    oCtx.drawImage(loadedSvg, offset, offset, sSize, sSize);
-                    oCtx.globalCompositeOperation = "source-in";
-                    oCtx.fillStyle = fgCol;
-                    oCtx.fillRect(0, 0, size, size);
-
-                    ctx.drawImage(offscreen, 0, 0);
-                }
-            }
-
             function shadeColor(color, percent) {
-                let R = parseInt(color.substring(1, 3), 16);
-                let G = parseInt(color.substring(3, 5), 16);
-                let B = parseInt(color.substring(5, 7), 16);
-                R = parseInt((R * (100 + percent)) / 100);
-                G = parseInt((G * (100 + percent)) / 100);
-                B = parseInt((B * (100 + percent)) / 100);
+                let R = parseInt(color.substring(1, 3), 16),
+                    G = parseInt(color.substring(3, 5), 16),
+                    B = parseInt(color.substring(5, 7), 16);
+                R = Math.min(255, parseInt((R * (100 + percent)) / 100));
+                G = Math.min(255, parseInt((G * (100 + percent)) / 100));
+                B = Math.min(255, parseInt((B * (100 + percent)) / 100));
                 return (
                     "#" +
                     ((1 << 24) + (R << 16) + (G << 8) + B).toString(16).slice(1)
                 );
             }
 
-            function downloadIcon(exportSize) {
-                const tempCanvas = document.createElement("canvas");
-                tempCanvas.width = exportSize;
-                tempCanvas.height = exportSize;
-                const tempCtx = tempCanvas.getContext("2d");
-                tempCtx.drawImage(canvas, 0, 0, exportSize, exportSize);
-                const link = document.createElement("a");
-                link.download = `icon_${exportSize}.png`;
-                link.href = tempCanvas.toDataURL("image/png");
-                link.click();
+            function clearImage() {
+                loadedImg = null;
+                isSVG = false;
+                el.imageInput.value = "";
+                el.svgPaste.value = "";
+                uploadText.innerText = "Click or Drag & Drop";
+                draw();
+            }
+
+            el.imageInput.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    el.svgPaste.value = "";
+                    isSVG = file.type === "image/svg+xml";
+                    const reader = new FileReader();
+                    reader.onload = (ev) => loadImageFromSrc(ev.target.result);
+                    reader.readAsDataURL(file);
+                    uploadText.innerText = "File: " + file.name;
+                }
+            });
+
+            el.svgPaste.addEventListener("input", (e) => {
+                const code = e.target.value.trim();
+                if (code.includes("<svg")) {
+                    el.imageInput.value = "";
+                    uploadText.innerText = "Click or Drag & Drop";
+
+                    isSVG = true;
+                    const blob = new Blob([code], {
+                        type: "image/svg+xml;charset=utf-8",
+                    });
+                    loadImageFromSrc(URL.createObjectURL(blob));
+                } else if (code === "") {
+                    clearImage();
+                }
+            });
+
+            function draw(
+                targetCtx = ctx,
+                targetSize = 1024,
+                isExport = false,
+            ) {
+                const bgCol = el.bgColor.value;
+                const fgCol = el.fgColor.value;
+                const roundPct = el.rounding.value;
+                const symPct = el.symbolSize.value;
+
+                targetCtx.clearRect(0, 0, targetSize, targetSize);
+
+                const margin = isExport ? 0 : targetSize * 0.08;
+                const drawSize = targetSize - margin * 2;
+                const radius = (drawSize * roundPct) / 100;
+
+                if (!isExport) {
+                    targetCtx.shadowColor = "rgba(0,0,0,0.5)";
+                    targetCtx.shadowBlur = targetSize * 0.04;
+                    targetCtx.shadowOffsetY = targetSize * 0.02;
+                }
+
+                const grad = targetCtx.createLinearGradient(
+                    0,
+                    margin,
+                    0,
+                    margin + drawSize,
+                );
+                grad.addColorStop(0, bgCol);
+                grad.addColorStop(1, shadeColor(bgCol, -15));
+                targetCtx.fillStyle = grad;
+
+                targetCtx.beginPath();
+                targetCtx.roundRect(margin, margin, drawSize, drawSize, radius);
+                targetCtx.fill();
+
+                targetCtx.shadowColor = "transparent";
+                targetCtx.shadowBlur = 0;
+
+                targetCtx.save();
+                targetCtx.clip();
+
+                if (loadedImg) {
+                    const sSize = drawSize * (symPct / 100);
+                    const offset = (targetSize - sSize) / 2;
+
+                    if (isSVG) {
+                        const offscreen = document.createElement("canvas");
+                        offscreen.width = targetSize;
+                        offscreen.height = targetSize;
+                        const oCtx = offscreen.getContext("2d");
+
+                        oCtx.drawImage(loadedImg, offset, offset, sSize, sSize);
+                        oCtx.globalCompositeOperation = "source-in";
+                        oCtx.fillStyle = fgCol;
+                        oCtx.fillRect(0, 0, targetSize, targetSize);
+
+                        targetCtx.drawImage(offscreen, 0, 0);
+                    } else {
+                        targetCtx.drawImage(
+                            loadedImg,
+                            offset,
+                            offset,
+                            sSize,
+                            sSize,
+                        );
+                    }
+                }
+
+                targetCtx.restore();
             }
 
             async function getResizedBlob(size) {
-                const canvas = document.getElementById("iconCanvas");
-                return new Promise((resolve) => {
-                    const tempCanvas = document.createElement("canvas");
-                    tempCanvas.width = size;
-                    tempCanvas.height = size;
-                    const tempCtx = tempCanvas.getContext("2d");
-                    tempCtx.drawImage(canvas, 0, 0, size, size);
-                    tempCanvas.toBlob((blob) => resolve(blob), "image/png");
-                });
+                const c = document.createElement("canvas");
+                c.width = size;
+                c.height = size;
+                draw(c.getContext("2d"), size, true);
+                return new Promise((r) => c.toBlob(r, "image/png"));
             }
 
-            // Android Export
+            function downloadIcon(size) {
+                size = Math.min(Math.max(size, 1), 4096);
+
+                const formatSelect = document.getElementById("exportFormat");
+                const mimeType = formatSelect.value;
+
+                const extension = mimeType === "image/webp" ? "webp" : "png";
+
+                const tempCanvas = document.createElement("canvas");
+                tempCanvas.width = size;
+                tempCanvas.height = size;
+                const tempCtx = tempCanvas.getContext("2d");
+
+                draw(tempCtx, size, true);
+
+                const link = document.createElement("a");
+
+                link.download = `icon_${size}x${size}.${extension}`;
+
+                link.href = tempCanvas.toDataURL(mimeType, 0.9);
+
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
             async function exportAndroid() {
                 const zip = new JSZip();
                 const res = {
-                    "mipmap-mdpi": 48,
-                    "mipmap-hdpi": 72,
-                    "mipmap-xhdpi": 96,
-                    "mipmap-xxhdpi": 144,
-                    "mipmap-xxxhdpi": 192,
-                    "playstore-icon": 512,
+                    mdpi: 48,
+                    hdpi: 72,
+                    xhdpi: 96,
+                    xxhdpi: 144,
+                    xxxhdpi: 192,
                 };
-
-                for (let path in res) {
-                    const blob = await getResizedBlob(res[path]);
-                    zip.file(`${path}/ic_launcher.png`, blob);
+                for (let label in res) {
+                    const blob = await getResizedBlob(res[label]);
+                    zip.file(`mipmap-${label}/ic_launcher.png`, blob);
                 }
-
                 const content = await zip.generateAsync({ type: "blob" });
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(content);
@@ -522,7 +719,6 @@
                 link.click();
             }
 
-            // iOS Export
             async function exportIOS() {
                 const zip = new JSZip();
                 const res = {
@@ -535,12 +731,10 @@
                     "Icon-180": 180,
                     "Icon-1024": 1024,
                 };
-
                 for (let name in res) {
                     const blob = await getResizedBlob(res[name]);
                     zip.file(`${name}.png`, blob);
                 }
-
                 const content = await zip.generateAsync({ type: "blob" });
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(content);
