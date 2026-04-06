@@ -22,7 +22,7 @@ const ASSETS = [
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return Promise.allSettled(ASSETS.map((url) => cache.add(url)));
+      return cache.addAll(ASSETS);
     }),
   );
   self.skipWaiting();
@@ -40,13 +40,23 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") return;
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse;
       }
+      const url = new URL(event.request.url);
+      if (
+        !url.pathname.endsWith("/") &&
+        !url.pathname.split("/").pop().includes(".")
+      ) {
+        return caches.match(url.pathname + "/");
+      }
+
       return fetch(event.request).catch(() => {
-        console.log("Network request failed and not in cache");
+        console.error("Offline fallback failed.");
       });
     }),
   );
