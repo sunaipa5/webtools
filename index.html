@@ -43,18 +43,56 @@
                     const link = this.getAttribute("link") || "#";
                     const title = this.getAttribute("title") || "Title";
                     const desc = this.getAttribute("desc") || "Description";
-
                     this.innerHTML = `
-                    <a href="${link}" class="web-tool-link">
-                        <div class="service">
-                            <span class="title">${title}</span>
-                            <span class="description">${desc}</span>
-                        </div>
-                    </a>
-                `;
+            <a href="${link}" class="web-tool-link">
+                <div class="service">
+                    <span class="title">${title}</span>
+                    <span class="description">${desc}</span>
+                </div>
+            </a>
+        `;
                 }
             }
-            customElements.define("web-tool", WebTool);
+
+            if (!customElements.get("web-tool")) {
+                customElements.define("web-tool", WebTool);
+            }
+
+            if ("serviceWorker" in navigator) {
+                window.addEventListener("load", () => {
+                    navigator.serviceWorker
+                        .register("/sw.js", { scope: "/" })
+                        .then((registration) => {
+                            registration.onupdatefound = () => {
+                                const installingWorker =
+                                    registration.installing;
+                                installingWorker.onstatechange = () => {
+                                    if (
+                                        installingWorker.state === "installed"
+                                    ) {
+                                        if (
+                                            navigator.serviceWorker.controller
+                                        ) {
+                                            console.log(
+                                                "New version available.",
+                                            );
+                                        } else {
+                                            console.log(
+                                                "Content is cached for offline use.",
+                                            );
+                                        }
+                                    }
+                                };
+                            };
+                        })
+                        .catch((error) => {
+                            console.error(
+                                "Service Worker registration failed:",
+                                error,
+                            );
+                        });
+                });
+            }
         </script>
     </body>
 </html>
