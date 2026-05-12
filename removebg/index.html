@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Bgremove</title>
+        <script type="module">
+            import {
+                AutoModel,
+                AutoProcessor,
+                RawImage,
+                env,
+            } from "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1";
+
+            env.allowLocalModels = false;
+
+            const elements = {
+                dropZone: document.getElementById("dropZone"),
+                fileInput: document.getElementById("fileInput"),
+                status: document.getElementById("status"),
+                progressContainer: document.getElementById("progressContainer"),
+                progressBar: document.getElementById("progressBar"),
+                previewContainer: document.getElementById("previewContainer"),
+                originalImg: document.getElementById("originalImg"),
+                resultImg: document.getElementById("resultImg"),
+                downloadBtn: document.getElementById("downloadBtn"),
+                loaderText: document.getElementById("loaderText"),
+            };
+
+            let model, processor;
+
+            // Initialize AI Model
+            async function init() {
+                try {
+                    updateStatus(
+                        "Downloading Model (approx. 170MB)...",
+                        "loading",
+                    );
+                    elements.progressContainer.style.display = "block";
+
+                    // Note: Transformers.js v2 doesn't support real progress hooks for model downloads easily
+                    // So we simulate or just show as indeterminate
+                    model = await AutoModel.from_pretrained("briaai/RMBG-1.4");
+                    processor =
+                        await AutoProcessor.from_pretrained("briaai/RMBG-1.4");
+
+                    updateStatus("Model Ready", "ready");
+                    elements.progressContainer.style.display = "none";
+                } catch (e) {
+                    updateStatus("Initialization Error: " + e.message, "error");
+                }
+            }
+            init();
+
+            async function processImage(file) {
+                if (!model || !processor || !file) return;
+
+                // UI Reset
+                elements.previewContainer.style.display = "grid";
+                elements.resultImg.style.display = "none";
+                elements.downloadBtn.style.display = "none";
+                elements.progressContainer.style.display = "block";
+                elements.progressBar.style.width = "0%";
+                updateStatus("Analyzing pixels...", "processing");
+
+                // Show Original
+                const url = URL.createObjectURL(file);
+                elements.originalImg.src = url;
+
+                try {
+                    const image = await RawImage.fromURL(url);
+                    elements.progressBar.style.width = "30%";
+
+                    const { pixel_values } = await processor(image);
+                    elements.progressBar.style.width = "60%";
+
+                    const model_outputs = await model({ input: pixel_values });
+                    elements.progressBar.style.width = "80%";
+
+                    const outputKey = Object.keys(model_outputs)[0];
+                    const outputTensor = model_outputs[outputKey];
+
+                    const data = outputTensor[0].data;
+                    const width = outputTensor[0].dims[2];
+                    const height = outputTensor[0].dims[1];
+
+                    const canvas = document.createElement("canvas");
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext("2d");
+                    const imageData = ctx.createImageData(width, height);
+
+                    for (let i = 0; i < data.length; ++i) {
+                        const alpha = Math.min(Math.max(data[i] * 255, 0), 255);
+                        const idx = i * 4;
+                        imageData.data[idx] = 0;
+                        imageData.data[idx + 1] = 0;
+                        imageData.data[idx + 2] = 0;
+                        imageData.data[idx + 3] = alpha;
+                    }
+                    ctx.putImageData(imageData, 0, 0);
+
+                    const finalCanvas = document.createElement("canvas");
+                    finalCanvas.width = image.width;
+                    finalCanvas.height = image.height;
+                    const finalCtx = finalCanvas.getContext("2d");
+
+                    const originalCanvas = await image.toCanvas();
+                    finalCtx.drawImage(originalCanvas, 0, 0);
+                    finalCtx.globalCompositeOperation = "destination-in";
+                    finalCtx.drawImage(canvas, 0, 0, image.width, image.height);
+
+                    const resultUrl = finalCanvas.toDataURL("image/png");
+                    elements.resultImg.src = resultUrl;
+                    elements.resultImg.style.display = "block";
+                    elements.downloadBtn.href = resultUrl;
+                    elements.downloadBtn.download = `no-bg-${Date.now()}.png`;
+                    elements.downloadBtn.style.display = "inline-flex";
+
+                    elements.progressBar.style.width = "100%";
+                    setTimeout(
+                        () =>
+                            (elements.progressContainer.style.display = "none"),
+                        500,
+                    );
+                    updateStatus("Background removed successfully!", "ready");
+                } catch (err) {
+                    console.error(err);
+                    updateStatus("Processing Error: " + err.message, "error");
+                }
+            }
+
+            // Helpers
+            function updateStatus(text, type) {
+                elements.status.innerText = text;
+                elements.status.className = type;
+            }
+
+            // Event Listeners
+            elements.dropZone.onclick = () => elements.fileInput.click();
+            elements.fileInput.onchange = (e) =>
+                processImage(e.target.files[0]);
+
+            elements.dropZone.ondragover = (e) => {
+                e.preventDefault();
+                elements.dropZone.classList.add("dragover");
+            };
+            elements.dropZone.ondragleave = () =>
+                elements.dropZone.classList.remove("dragover");
+            elements.dropZone.ondrop = (e) => {
+                e.preventDefault();
+                elements.dropZone.classList.remove("dragover");
+                processImage(e.dataTransfer.files[0]);
+            };
+        </script>
+        <link rel="stylesheet" href="../style.css" />
+        <style>
+            body {
+                margin: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+            }
+
+            .container {
+                width: 90%;
+                max-width: 900px;
+                background: var(--card-bg);
+                padding: 2rem;
+                border-radius: 2rem;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+                text-align: center;
+            }
+
+            h1 {
+                margin-bottom: 0.5rem;
+                font-weight: 800;
+                letter-spacing: -1px;
+            }
+            p {
+                color: #94a3b8;
+                margin-bottom: 2rem;
+            }
+
+            /* Drag & Drop Area */
+            .drop-zone {
+                border: 2px dashed var(--accent);
+                border-radius: 1.5rem;
+                padding: 3rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                background: var(--entry-bg);
+                margin-bottom: 1.5rem;
+            }
+
+            .drop-zone:hover,
+            .drop-zone.dragover {
+                border-color: var(--accent);
+                background: var(--card-bg);
+            }
+            .drop-zone-text {
+                font-weight: 500;
+                color: #cbd5e1;
+            }
+
+            /* Progress Bar */
+            .progress-container {
+                width: 100%;
+                height: 8px;
+                background: var(--entry-bg);
+                border-radius: 4px;
+                margin: 1.5rem 0;
+                overflow: hidden;
+                display: none;
+            }
+            .progress-bar {
+                width: 0%;
+                height: 100%;
+                background: var(--accent);
+                transition: width 0.3s ease;
+                box-shadow: 0 0 15px var(--accent);
+            }
+
+            /* Status Toggles */
+            #status {
+                font-size: 0.85rem;
+                font-weight: 600;
+                margin-bottom: 1rem;
+            }
+            .loading {
+                color: var(--accent);
+            }
+            .ready {
+                color: #4ade80;
+            }
+            .processing {
+                color: #fbbf24;
+                animation: pulse 1.5s infinite;
+            }
+            .error {
+                color: var(--error);
+            }
+
+            /* Preview Grid */
+            .preview-grid {
+                display: none;
+                grid-template-columns: 1fr 1fr;
+                gap: 1.5rem;
+                margin-top: 1.5rem;
+            }
+            .preview-box {
+                text-align: left;
+            }
+            .preview-box label {
+                font-size: 0.75rem;
+                font-weight: bold;
+                color: var(--accent);
+                text-transform: uppercase;
+                margin-bottom: 0.5rem;
+                display: block;
+            }
+            .preview-box img {
+                width: 100%;
+                border-radius: 1rem;
+                border: 2px solid var(--card-bg);
+                min-height: 200px;
+                object-fit: contain;
+                background: var(--entry-bg);
+            }
+            .transparent-bg {
+                background-image: conic-gradient(
+                    var(--accent) 0.25turn,
+                    var(--entry-bg) 0.25turn 0.5turn,
+                    var(--accent) 0.5turn 0.75turn,
+                    var(--entry-bg) 0.75turn
+                ) !important;
+                background-size: 20px 20px !important;
+            }
+
+            /* Buttons */
+            .btn {
+                display: none;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                background: var(--accent);
+                color: var(--bg);
+                padding: 1rem 2rem;
+                border-radius: 0.75rem;
+                text-decoration: none;
+                font-weight: 700;
+                margin-top: 2rem;
+                transition: transform 0.2s;
+            }
+            .btn:hover {
+                transform: translateY(-2px);
+            }
+
+            @keyframes pulse {
+                0% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.6;
+                }
+                100% {
+                    opacity: 1;
+                }
+            }
+
+            @media (max-width: 600px) {
+                .preview-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Background remove</h1>
+            <p>
+                ⚠️ <strong>Data Warning:</strong> This tool downloads the 173MB
+                <strong>RMBG-1.4</strong> model on its first run. We recommend
+                using Wi-Fi to avoid mobile data charges.
+            </p>
+
+            <div class="drop-zone" id="dropZone">
+                <input type="file" id="fileInput" accept="image/*" hidden />
+                <div class="drop-zone-text">
+                    <svg
+                        width="40"
+                        height="40"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        style="margin-bottom: 10px; color: var(--accent)"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        ></path></svg
+                    ><br />
+                    Drop your image here or <strong>browse</strong>
+                </div>
+            </div>
+
+            <div id="status" class="loading">Initializing...</div>
+
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div class="preview-grid" id="previewContainer">
+                <div class="preview-box">
+                    <label>Original</label>
+                    <img id="originalImg" src="" alt="Original" />
+                </div>
+                <div class="preview-box">
+                    <label>Result</label>
+                    <img
+                        id="resultImg"
+                        class="transparent-bg"
+                        src=""
+                        alt="Result"
+                    />
+                </div>
+            </div>
+
+            <a id="downloadBtn" class="btn" href="#">
+                <svg
+                    width="20"
+                    height="20"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                    ></path>
+                </svg>
+                Download PNG
+            </a>
+        </div>
+    </body>
+</html>
