@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Table Maker - Adwaita Dark</title>
+        <style>
+            :root {
+                --bg-color: #1e1e1e;
+                --card-bg: #2d2d2d;
+                --entry-bg: #383838;
+                --text-main: #ffffff;
+                --text-muted: #b3b3b3;
+                --adwaita-blue: #3584e4;
+                --accent: #3584e4;
+                --border-color: rgba(255, 255, 255, 0.08);
+                --header-text: #ffffff;
+            }
+
+            @supports (color: color-mix(in srgb, AccentColor, transparent)) {
+                :root {
+                    --accent: AccentColor;
+                }
+            }
+
+            @media screen and (max-width: 0px) {
+                :root {
+                    --accent: var(--adwaita-blue);
+                }
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html {
+                touch-action: manipulation;
+            }
+
+            body {
+                background-color: var(--bg-color);
+                color: var(--text-main);
+                font-family:
+                    "Inter",
+                    "Cantarell",
+                    system-ui,
+                    -apple-system,
+                    sans-serif;
+                margin: 0;
+                padding: 20px 12px;
+                line-height: 1.5;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                min-height: 100vh;
+            }
+
+            .container {
+                width: 100%;
+                max-width: 900px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+                font-weight: 800;
+                margin-top: 0;
+                margin-bottom: 6px;
+                letter-spacing: -0.5px;
+            }
+
+            p.subtitle {
+                color: var(--text-muted);
+                margin-bottom: 24px;
+                font-size: 0.9rem;
+            }
+
+            .back-link {
+                display: inline-block;
+                text-decoration: none;
+                color: var(--accent);
+                font-weight: 600;
+                margin-bottom: 16px;
+                font-size: 0.88rem;
+                transition: opacity 0.2s;
+            }
+
+            .back-link:hover {
+                opacity: 0.8;
+            }
+
+            .card {
+                background: var(--card-bg);
+                border-radius: 12px;
+                padding: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+                margin-bottom: 20px;
+            }
+
+            /* Control Sections */
+            .section-title {
+                font-size: 0.72rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.8px;
+                color: var(--text-muted);
+                margin-bottom: 10px;
+            }
+
+            .control-row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+
+            .control-row:last-child {
+                margin-bottom: 0;
+            }
+
+            /* Inputs and Controls */
+            input[type="number"],
+            select {
+                background: var(--entry-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                color: #fff;
+                padding: 8px 12px;
+                font-size: 0.88rem;
+                outline: none;
+                transition: border-color 0.2s;
+                height: 38px;
+            }
+
+            input[type="number"]:focus,
+            select:focus {
+                border-color: var(--accent);
+            }
+
+            input[type="number"] {
+                width: 80px;
+            }
+
+            select {
+                cursor: pointer;
+                min-width: 160px;
+            }
+
+            /* Buttons */
+            .btn-group {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            button {
+                padding: 8px 14px;
+                border-radius: 8px;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                font-weight: 700;
+                font-size: 0.78rem;
+                letter-spacing: 0.3px;
+                cursor: pointer;
+                transition: all 0.2s;
+                text-transform: uppercase;
+                height: 38px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                white-space: nowrap;
+                user-select: none;
+            }
+
+            .btn-accent {
+                background-color: var(--accent, var(--adwaita-blue));
+                color: white;
+                border: none;
+            }
+
+            .btn-secondary {
+                background-color: var(--entry-bg);
+                color: white;
+            }
+
+            .btn-secondary:hover {
+                background-color: #454545;
+            }
+
+            .btn-outline {
+                background-color: transparent;
+                color: var(--text-main);
+                border: 1px solid var(--border-color);
+            }
+
+            .btn-outline:hover {
+                background-color: var(--entry-bg);
+            }
+
+            button:hover {
+                filter: brightness(1.1);
+                transform: translateY(-1px);
+            }
+
+            button:active {
+                transform: translateY(0);
+            }
+
+            /* Table Wrapper & Mobile Responsiveness */
+            .table-container {
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                border-radius: 8px;
+                border: 1px solid var(--border-color);
+                background: var(--entry-bg);
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 0.88rem;
+                color: var(--text-main);
+                background: var(--entry-bg);
+            }
+
+            th,
+            td {
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 10px 12px;
+                text-align: left;
+                min-width: 90px;
+                outline: none;
+                transition: background 0.15s;
+                word-break: break-word;
+                height: 42px;
+                line-height: 1.5;
+            }
+
+            /* Darkened Accent Header Color */
+            th {
+                background-color: color-mix(
+                    in srgb,
+                    var(--accent, var(--adwaita-blue)) 70%,
+                    #000000
+                );
+                color: var(--header-text);
+                font-weight: 700;
+            }
+
+            td {
+                background-color: var(--card-bg);
+            }
+
+            td[contenteditable="true"]:focus,
+            th[contenteditable="true"]:focus {
+                background-color: #3f3f3f;
+                box-shadow: inset 0 0 0 2px var(--accent);
+            }
+
+            /* Notification Toast */
+            .toast {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: var(--accent, var(--adwaita-blue));
+                color: #fff;
+                padding: 10px 18px;
+                border-radius: 8px;
+                font-size: 0.85rem;
+                font-weight: 600;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+                opacity: 0;
+                transform: translateY(15px);
+                transition: all 0.25s ease;
+                pointer-events: none;
+                z-index: 1000;
+            }
+
+            .toast.show {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            @media (max-width: 600px) {
+                body {
+                    padding: 16px 8px;
+                }
+                .card {
+                    padding: 16px;
+                }
+                button {
+                    flex: 1 1 calc(50% - 6px);
+                    font-size: 0.74rem;
+                    padding: 6px 10px;
+                }
+                input[type="number"],
+                select {
+                    width: 100%;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <a href="../" class="back-link">← Back</a>
+            <h1>Table Maker</h1>
+            <p class="subtitle">Create, edit, and export responsive tables</p>
+
+            <div class="card">
+                <!-- Table Dimensions Section -->
+                <div class="section-title">Table Dimensions</div>
+                <div class="control-row">
+                    <input
+                        type="number"
+                        id="rowsInput"
+                        value="5"
+                        min="1"
+                        max="50"
+                        placeholder="Rows"
+                    />
+                    <input
+                        type="number"
+                        id="colsInput"
+                        value="5"
+                        min="1"
+                        max="20"
+                        placeholder="Cols"
+                    />
+                    <button class="btn-accent" onclick="generateTable()">
+                        Generate Table
+                    </button>
+                </div>
+
+                <!-- Header Options Section -->
+                <div class="section-title">Header Options</div>
+                <div class="control-row">
+                    <select id="headerTypeSelect">
+                        <option value="top">Top Row Header</option>
+                        <option value="left">First Column Header</option>
+                        <option value="both">Both Top & Left Headers</option>
+                        <option value="none">No Headers</option>
+                    </select>
+                    <button
+                        class="btn-secondary"
+                        onclick="applyHeaderOptions()"
+                    >
+                        Apply Header
+                    </button>
+                </div>
+
+                <div class="control-row btn-group">
+                    <button
+                        class="btn-outline"
+                        onclick="loadPreset('schedule')"
+                    >
+                        Schedule
+                    </button>
+                    <button
+                        class="btn-outline"
+                        onclick="loadPreset('checklist')"
+                    >
+                        Checklist
+                    </button>
+                    <button class="btn-outline" onclick="loadPreset('pricing')">
+                        Pricing Table
+                    </button>
+                    <button class="btn-outline" onclick="loadPreset('contact')">
+                        Contact List
+                    </button>
+                    <button
+                        class="btn-outline"
+                        onclick="loadPreset('inventory')"
+                    >
+                        Inventory
+                    </button>
+                </div>
+
+                <!-- Table Actions Section -->
+                <div class="section-title">Table Actions</div>
+                <div class="control-row btn-group">
+                    <button class="btn-secondary" onclick="addRow()">
+                        Add Row
+                    </button>
+                    <button class="btn-secondary" onclick="addColumn()">
+                        Add Column
+                    </button>
+                    <button class="btn-secondary" onclick="removeRow()">
+                        Remove Row
+                    </button>
+                    <button class="btn-secondary" onclick="removeColumn()">
+                        Remove Column
+                    </button>
+                    <button class="btn-secondary" onclick="clearAll()">
+                        Clear All
+                    </button>
+                </div>
+
+                <!-- Export Options Section -->
+                <div class="section-title">Export Options</div>
+                <div class="control-row">
+                    <select id="exportThemeSelect">
+                        <option value="dark" selected>
+                            Export Theme: Dark
+                        </option>
+                        <option value="light">Export Theme: Light</option>
+                    </select>
+                </div>
+                <div class="control-row btn-group">
+                    <button class="btn-accent" onclick="exportPDF()">
+                        Export as PDF
+                    </button>
+                    <button class="btn-accent" onclick="exportImage('png')">
+                        Export as PNG
+                    </button>
+                    <button class="btn-accent" onclick="exportImage('jpeg')">
+                        Export as JPEG
+                    </button>
+                    <button class="btn-secondary" onclick="exportCSV()">
+                        Export as CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Interactive Table Container -->
+            <div class="card" style="padding: 12px">
+                <div class="table-container">
+                    <table id="interactiveTable">
+                        <!-- Dynamic Table Content -->
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Toast -->
+        <div id="toast" class="toast">Action completed</div>
+
+        <script>
+            let currentRows = 5;
+            let currentCols = 5;
+            let currentHeaderType = "top";
+
+            const presets = {
+                schedule: {
+                    headers: [
+                        "Time",
+                        "Monday",
+                        "Tuesday",
+                        "Wednesday",
+                        "Thursday",
+                        "Friday",
+                    ],
+                    rows: [
+                        [
+                            "09:00 AM",
+                            "Team Sync",
+                            "Development",
+                            "Client Call",
+                            "Development",
+                            "Weekly Review",
+                        ],
+                        [
+                            "11:00 AM",
+                            "Code Review",
+                            "Design Sprint",
+                            "Code Review",
+                            "Architecture",
+                            "Team Lunch",
+                        ],
+                        [
+                            "02:00 PM",
+                            "Project A",
+                            "Testing",
+                            "Project B",
+                            "Testing",
+                            "1-on-1 Sync",
+                        ],
+                        [
+                            "04:00 PM",
+                            "Documentation",
+                            "Bug Fixing",
+                            "Documentation",
+                            "Refactoring",
+                            "Wrap Up",
+                        ],
+                    ],
+                },
+                checklist: {
+                    headers: [
+                        "Task ID",
+                        "Description",
+                        "Priority",
+                        "Status",
+                        "Assignee",
+                    ],
+                    rows: [
+                        [
+                            "TSK-01",
+                            "Design Adwaita Dark UI",
+                            "High",
+                            "Completed",
+                            "Alex",
+                        ],
+                        [
+                            "TSK-02",
+                            "Setup export modules",
+                            "Medium",
+                            "In Progress",
+                            "Sam",
+                        ],
+                        [
+                            "TSK-03",
+                            "Write unit test cases",
+                            "Low",
+                            "Pending",
+                            "Jordan",
+                        ],
+                        [
+                            "TSK-04",
+                            "Deploy to production",
+                            "High",
+                            "Pending",
+                            "Alex",
+                        ],
+                    ],
+                },
+                pricing: {
+                    headers: [
+                        "Feature",
+                        "Basic ($9)",
+                        "Pro ($29)",
+                        "Enterprise ($99)",
+                    ],
+                    rows: [
+                        [
+                            "Users Included",
+                            "1 User",
+                            "Up to 10 Users",
+                            "Unlimited",
+                        ],
+                        ["Storage Space", "10 GB", "100 GB", "1 TB"],
+                        ["API Access", "No", "Yes", "Dedicated"],
+                        [
+                            "Support",
+                            "Community",
+                            "Priority Email",
+                            "24/7 Dedicated",
+                        ],
+                    ],
+                },
+                contact: {
+                    headers: [
+                        "Full Name",
+                        "Role",
+                        "Email",
+                        "Phone",
+                        "Location",
+                    ],
+                    rows: [
+                        [
+                            "Eleanor Vance",
+                            "Product Designer",
+                            "eleanor@example.com",
+                            "+1 555-0192",
+                            "New York",
+                        ],
+                        [
+                            "Marcus Brody",
+                            "Software Engineer",
+                            "marcus@example.com",
+                            "+1 555-0148",
+                            "Berlin",
+                        ],
+                        [
+                            "Sophia Al-Jamil",
+                            "Data Scientist",
+                            "sophia@example.com",
+                            "+1 555-0173",
+                            "London",
+                        ],
+                    ],
+                },
+                inventory: {
+                    headers: [
+                        "SKU Code",
+                        "Item Name",
+                        "Category",
+                        "Stock",
+                        "Unit Price",
+                    ],
+                    rows: [
+                        [
+                            "INV-101",
+                            "Mechanical Keyboard",
+                            "Peripherals",
+                            "42",
+                            "$120.00",
+                        ],
+                        [
+                            "INV-102",
+                            "Ergonomic Chair",
+                            "Furniture",
+                            "15",
+                            "$350.00",
+                        ],
+                        [
+                            "INV-103",
+                            '4K Monitor 27"',
+                            "Displays",
+                            "8",
+                            "$450.00",
+                        ],
+                        [
+                            "INV-104",
+                            "USB-C Dock Station",
+                            "Accessories",
+                            "27",
+                            "$89.00",
+                        ],
+                    ],
+                },
+            };
+
+            window.onload = function () {
+                generateTable();
+            };
+
+            function showToast(msg) {
+                const toast = document.getElementById("toast");
+                toast.textContent = msg;
+                toast.classList.add("show");
+                setTimeout(() => toast.classList.remove("show"), 2200);
+            }
+
+            /* Auto-clear cell content if default R1C1 pattern exists when focused */
+            function attachCellEvents(cell) {
+                cell.contentEditable = "true";
+
+                cell.addEventListener("focus", function () {
+                    const txt = this.textContent.trim();
+                    // Check if string matches R1C1, R12C34 default formats
+                    if (/^R\d+C\d+$/i.test(txt)) {
+                        this.textContent = "";
+                    }
+                });
+            }
+
+            function generateTable() {
+                const rowsInput = document.getElementById("rowsInput");
+                const colsInput = document.getElementById("colsInput");
+
+                currentRows = parseInt(rowsInput.value) || 5;
+                currentCols = parseInt(colsInput.value) || 5;
+
+                const table = document.getElementById("interactiveTable");
+                table.innerHTML = "";
+
+                for (let r = 1; r <= currentRows; r++) {
+                    const tr = document.createElement("tr");
+                    for (let c = 1; c <= currentCols; c++) {
+                        const isTopHeader =
+                            (currentHeaderType === "top" ||
+                                currentHeaderType === "both") &&
+                            r === 1;
+                        const isLeftHeader =
+                            (currentHeaderType === "left" ||
+                                currentHeaderType === "both") &&
+                            c === 1;
+
+                        const cell =
+                            isTopHeader || isLeftHeader
+                                ? document.createElement("th")
+                                : document.createElement("td");
+
+                        cell.textContent = `R${r}C${c}`;
+                        attachCellEvents(cell);
+                        tr.appendChild(cell);
+                    }
+                    table.appendChild(tr);
+                }
+                showToast(`Generated ${currentRows}x${currentCols} table`);
+            }
+
+            function applyHeaderOptions() {
+                currentHeaderType =
+                    document.getElementById("headerTypeSelect").value;
+                const table = document.getElementById("interactiveTable");
+                const rows = table.querySelectorAll("tr");
+
+                rows.forEach((row, rowIndex) => {
+                    const cells = Array.from(row.children);
+                    cells.forEach((cell, colIndex) => {
+                        const isTop =
+                            (currentHeaderType === "top" ||
+                                currentHeaderType === "both") &&
+                            rowIndex === 0;
+                        const isLeft =
+                            (currentHeaderType === "left" ||
+                                currentHeaderType === "both") &&
+                            colIndex === 0;
+
+                        const isHeader = isTop || isLeft;
+                        const content = cell.textContent;
+
+                        if (isHeader && cell.tagName !== "TH") {
+                            const th = document.createElement("th");
+                            th.textContent = content;
+                            attachCellEvents(th);
+                            row.replaceChild(th, cell);
+                        } else if (!isHeader && cell.tagName !== "TD") {
+                            const td = document.createElement("td");
+                            td.textContent = content;
+                            attachCellEvents(td);
+                            row.replaceChild(td, cell);
+                        }
+                    });
+                });
+                showToast("Header style applied");
+            }
+
+            function loadPreset(presetKey) {
+                const data = presets[presetKey];
+                if (!data) return;
+
+                currentHeaderType = "top";
+                document.getElementById("headerTypeSelect").value = "top";
+
+                currentCols = data.headers.length;
+                currentRows = data.rows.length + 1;
+
+                document.getElementById("rowsInput").value = currentRows;
+                document.getElementById("colsInput").value = currentCols;
+
+                const table = document.getElementById("interactiveTable");
+                table.innerHTML = "";
+
+                // Header
+                const headerRow = document.createElement("tr");
+                data.headers.forEach((text) => {
+                    const th = document.createElement("th");
+                    th.textContent = text;
+                    attachCellEvents(th);
+                    headerRow.appendChild(th);
+                });
+                table.appendChild(headerRow);
+
+                // Body
+                data.rows.forEach((rowData) => {
+                    const tr = document.createElement("tr");
+                    rowData.forEach((text) => {
+                        const td = document.createElement("td");
+                        td.textContent = text;
+                        attachCellEvents(td);
+                        tr.appendChild(td);
+                    });
+                    table.appendChild(tr);
+                });
+
+                showToast(`Loaded ${presetKey.toUpperCase()} preset`);
+            }
+
+            function addRow() {
+                const table = document.getElementById("interactiveTable");
+                const colCount = table.rows[0]
+                    ? table.rows[0].children.length
+                    : currentCols;
+                const tr = document.createElement("tr");
+
+                for (let c = 1; c <= colCount; c++) {
+                    const isLeftHeader =
+                        (currentHeaderType === "left" ||
+                            currentHeaderType === "both") &&
+                        c === 1;
+                    const cell = isLeftHeader
+                        ? document.createElement("th")
+                        : document.createElement("td");
+                    cell.textContent = `R${table.rows.length + 1}C${c}`;
+                    attachCellEvents(cell);
+                    tr.appendChild(cell);
+                }
+                table.appendChild(tr);
+                currentRows++;
+                document.getElementById("rowsInput").value = currentRows;
+                showToast("Added 1 Row");
+            }
+
+            function addColumn() {
+                const table = document.getElementById("interactiveTable");
+                const rows = table.rows;
+
+                if (rows.length === 0) {
+                    generateTable();
+                    return;
+                }
+
+                for (let r = 0; r < rows.length; r++) {
+                    const isTopHeader =
+                        (currentHeaderType === "top" ||
+                            currentHeaderType === "both") &&
+                        r === 0;
+                    const cell = isTopHeader
+                        ? document.createElement("th")
+                        : document.createElement("td");
+                    cell.textContent = `R${r + 1}C${rows[r].children.length + 1}`;
+                    attachCellEvents(cell);
+                    rows[r].appendChild(cell);
+                }
+                currentCols++;
+                document.getElementById("colsInput").value = currentCols;
+                showToast("Added 1 Column");
+            }
+
+            function removeRow() {
+                const table = document.getElementById("interactiveTable");
+                if (table.rows.length > 1) {
+                    table.deleteRow(-1);
+                    currentRows--;
+                    document.getElementById("rowsInput").value = currentRows;
+                    showToast("Removed row");
+                }
+            }
+
+            function removeColumn() {
+                const table = document.getElementById("interactiveTable");
+                const rows = table.rows;
+
+                if (rows.length > 0 && rows[0].children.length > 1) {
+                    for (let i = 0; i < rows.length; i++) {
+                        rows[i].removeChild(rows[i].lastElementChild);
+                    }
+                    currentCols--;
+                    document.getElementById("colsInput").value = currentCols;
+                    showToast("Removed column");
+                }
+            }
+
+            function clearAll() {
+                const table = document.getElementById("interactiveTable");
+                const cells = table.querySelectorAll("th, td");
+                cells.forEach((cell) => (cell.textContent = ""));
+                showToast("Cleared table content");
+            }
+
+            function renderTableToCanvas() {
+                const table = document.getElementById("interactiveTable");
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+
+                const rows = Array.from(table.rows);
+                if (rows.length === 0) return null;
+
+                const exportTheme =
+                    document.getElementById("exportThemeSelect").value;
+                const isLight = exportTheme === "light";
+
+                const rowHeight = 44;
+                const colWidths = [];
+
+                // Calculate max width for each column based on content
+                const colCount = rows[0].children.length;
+                ctx.font = "14px Inter, system-ui, sans-serif";
+
+                for (let c = 0; c < colCount; c++) {
+                    let maxW = 100;
+                    rows.forEach((row) => {
+                        const text = row.children[c]
+                            ? row.children[c].textContent.trim()
+                            : "";
+                        const metrics = ctx.measureText(text);
+                        if (metrics.width + 32 > maxW) {
+                            maxW = Math.ceil(metrics.width + 32);
+                        }
+                    });
+                    colWidths.push(maxW);
+                }
+
+                const totalWidth = colWidths.reduce((a, b) => a + b, 0);
+                const totalHeight = rows.length * rowHeight;
+
+                const dpr = 2; // Hi-DPI resolution
+                canvas.width = totalWidth * dpr;
+                canvas.height = totalHeight * dpr;
+                ctx.scale(dpr, dpr);
+
+                // Background theme fill
+                ctx.fillStyle = isLight ? "#f6f8fa" : "#1e1e1e";
+                ctx.fillRect(0, 0, totalWidth, totalHeight);
+
+                let currentY = 0;
+                rows.forEach((row, rowIndex) => {
+                    let currentX = 0;
+
+                    Array.from(row.children).forEach((cell, colIndex) => {
+                        const w = colWidths[colIndex];
+                        const isHeader = cell.tagName === "TH";
+
+                        // Theme Colors
+                        if (isHeader) {
+                            ctx.fillStyle = isLight ? "#3584e4" : "#244872";
+                        } else {
+                            ctx.fillStyle = isLight ? "#ffffff" : "#2d2d2d";
+                        }
+                        ctx.fillRect(currentX, currentY, w, rowHeight);
+
+                        // Cell Borders
+                        ctx.strokeStyle = isLight
+                            ? "#e1e4e8"
+                            : "rgba(255, 255, 255, 0.1)";
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(currentX, currentY, w, rowHeight);
+
+                        // Text colors
+                        if (isHeader) {
+                            ctx.fillStyle = "#ffffff";
+                        } else {
+                            ctx.fillStyle = isLight ? "#24292e" : "#ffffff";
+                        }
+
+                        ctx.font = isHeader
+                            ? "bold 14px Inter, sans-serif"
+                            : "14px Inter, sans-serif";
+                        ctx.textBaseline = "middle";
+                        ctx.fillText(
+                            cell.textContent.trim(),
+                            currentX + 12,
+                            currentY + rowHeight / 2,
+                        );
+
+                        currentX += w;
+                    });
+
+                    currentY += rowHeight;
+                });
+
+                return canvas;
+            }
+
+            // Helper to get formatted timestamp: YYYYMMDD-HHMM
+            function getTimestamp() {
+                const now = new Date();
+                const pad = (n) => String(n).padStart(2, "0");
+                const date = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
+                const time = `${pad(now.getHours())}${pad(now.getMinutes())}`;
+                return `${date}-${time}`;
+            }
+
+            function exportImage(format) {
+                const canvas = renderTableToCanvas();
+                if (!canvas) return;
+
+                const theme =
+                    document.getElementById("exportThemeSelect").value;
+                const mimeType = format === "jpeg" ? "image/jpeg" : "image/png";
+                const link = document.createElement("a");
+                link.download = `table-${getTimestamp()}.${format}`;
+                link.href = canvas.toDataURL(mimeType, 0.95);
+                link.click();
+                showToast(
+                    `Exported ${theme.toUpperCase()} ${format.toUpperCase()}`,
+                );
+            }
+
+            function exportPDF() {
+                const canvas = renderTableToCanvas();
+                if (!canvas) return;
+
+                const theme =
+                    document.getElementById("exportThemeSelect").value;
+                const bg = theme === "light" ? "#ffffff" : "#1e1e1e";
+                const dataUrl = canvas.toDataURL("image/png");
+                const filename = `table-${getTimestamp()}`;
+                const win = window.open("");
+                win.document.write(`
+                    <html>
+                    <head>
+                        <title>${filename}</title>
+                        <style>
+                            body { margin: 0; display: flex; justify-content: center; align-items: center; background: ${bg}; min-height: 100vh; }
+                            img { max-width: 95%; height: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.5); border-radius: 8px; }
+                            @media print {
+                                body { background: #fff; }
+                                img { max-width: 100%; box-shadow: none; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <img src="${dataUrl}" onload="window.print(); window.close();"/>
+                    </body>
+                    </html>
+                `);
+                win.document.close();
+                showToast(`Opening ${theme.toUpperCase()} print/PDF dialog...`);
+            }
+
+            function exportCSV() {
+                const table = document.getElementById("interactiveTable");
+                let csv = [];
+
+                for (let row of table.rows) {
+                    let rowData = [];
+                    for (let cell of row.children) {
+                        let text = cell.textContent.trim().replace(/"/g, '""');
+                        rowData.push(`"${text}"`);
+                    }
+                    csv.push(rowData.join(","));
+                }
+
+                const csvContent = "\uFEFF" + csv.join("\n"); // UTF-8 BOM
+                const blob = new Blob([csvContent], {
+                    type: "text/csv;charset=utf-8;",
+                });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = `table-${getTimestamp()}.csv`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                showToast("Exported CSV");
+            }
+        </script>
+    </body>
+</html>
