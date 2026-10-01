@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>PDF Split & Merge - Web Tools</title>
+        <link rel="stylesheet" href="../style.css" />
+
+        <script src="pdf-tool/pdf-lib.min.js"></script>
+
+        <style>
+            .drop-zone {
+                border: 2px dashed rgba(255, 255, 255, 0.15);
+                border-radius: 8px;
+                padding: 32px 20px;
+                text-align: center;
+                background-color: var(--entry-bg);
+                transition:
+                    border-color 0.2s ease,
+                    background-color 0.2s ease;
+                margin-bottom: 16px;
+                cursor: pointer;
+            }
+
+            .drop-zone.dragover {
+                border-color: var(--accent, var(--adwaita-blue, #3584e4));
+                background-color: rgba(53, 132, 228, 0.08);
+            }
+
+            .drop-zone p {
+                margin-bottom: 16px;
+                color: var(--text-muted);
+                font-size: 0.875rem;
+                pointer-events: none;
+            }
+
+            .progress-container {
+                display: none;
+                margin-bottom: 16px;
+            }
+
+            .progress-bar-bg {
+                width: 100%;
+                height: 6px;
+                background-color: rgba(255, 255, 255, 0.1);
+                border-radius: 3px;
+                overflow: hidden;
+            }
+
+            .progress-bar-fill {
+                height: 100%;
+                width: 0%;
+                background-color: var(--accent, var(--adwaita-blue, #3584e4));
+                transition: width 0.1s linear;
+            }
+
+            .progress-info {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 6px;
+                font-size: 0.8rem;
+                color: var(--text-muted);
+            }
+
+            .file-list {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                margin-top: 20px;
+                margin-bottom: 24px;
+            }
+
+            .file-item {
+                background-color: var(--entry-bg);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 8px;
+                padding: 16px;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                transition: border-color 0.2s ease;
+            }
+
+            .file-item:hover {
+                border-color: rgba(255, 255, 255, 0.15);
+            }
+
+            .file-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .file-name {
+                font-weight: 700;
+                font-size: 0.95rem;
+                color: var(--text-main);
+                word-break: break-all;
+            }
+
+            .file-badge {
+                background-color: rgba(255, 255, 255, 0.1);
+                color: var(--text-muted);
+                font-size: 0.75rem;
+                font-weight: 600;
+                padding: 4px 8px;
+                border-radius: 12px;
+                white-space: nowrap;
+            }
+
+            .input-group {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .input-group label {
+                font-size: 0.8rem;
+                color: var(--text-muted);
+                font-weight: 600;
+            }
+
+            .text-input {
+                width: 100%;
+                background: var(--bg-color);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 6px;
+                color: var(--text-main);
+                padding: 10px 12px;
+                font-family: "Monaco", "Consolas", "Ubuntu Mono", monospace;
+                font-size: 0.875rem;
+                outline: none;
+                transition: border-color 0.2s;
+            }
+
+            .text-input:focus {
+                border-color: var(--accent, var(--adwaita-blue));
+            }
+
+            .status-message {
+                font-size: 0.85rem;
+                color: var(--text-muted);
+                align-self: center;
+            }
+
+            .file-item-actions {
+                display: flex;
+                justify-content: flex-end;
+            }
+
+            .btn-remove {
+                background: transparent;
+                color: #f66151;
+                padding: 4px 8px;
+                font-size: 0.8rem;
+                border-radius: 4px;
+            }
+
+            .btn-remove:hover {
+                background-color: rgba(246, 97, 81, 0.15);
+            }
+
+            button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                transform: none !important;
+                filter: none !important;
+            }
+
+            @media (max-width: 600px) {
+                .btn-group {
+                    flex-direction: column;
+                }
+
+                button {
+                    width: 100%;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <a href="../" class="back-link">← Back to Web Tools</a>
+
+            <h1>PDF Split & Merge</h1>
+            <p class="subtitle">
+                Extract specific pages or merge multiple PDF documents directly
+                in your browser.
+            </p>
+
+            <div class="card">
+                <input
+                    type="file"
+                    id="pdfInput"
+                    accept="application/pdf"
+                    multiple
+                    style="display: none"
+                />
+
+                <div class="drop-zone" id="dropZone">
+                    <p>
+                        Drag and drop PDF files here, or click anywhere in this
+                        area
+                    </p>
+                    <div
+                        class="btn-group"
+                        style="
+                            margin-top: 0;
+                            justify-content: center;
+                            pointer-events: auto;
+                        "
+                    >
+                        <button id="selectBtn" class="btn-accent" type="button">
+                            + Add PDF Files
+                        </button>
+                        <button
+                            id="clearBtn"
+                            class="btn-secondary"
+                            type="button"
+                            style="display: none"
+                        >
+                            Clear All
+                        </button>
+                    </div>
+                </div>
+
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar-bg">
+                        <div
+                            class="progress-bar-fill"
+                            id="progressBarFill"
+                        ></div>
+                    </div>
+                    <div class="progress-info">
+                        <span id="uploadStatusText">Reading files...</span>
+                        <span id="uploadPercentText">0%</span>
+                    </div>
+                </div>
+
+                <div id="fileList" class="file-list"></div>
+
+                <div
+                    class="btn-group"
+                    style="
+                        border-top: 1px solid rgba(255, 255, 255, 0.05);
+                        padding-top: 16px;
+                    "
+                >
+                    <button id="processBtn" class="btn-accent" disabled>
+                        Generate PDF
+                    </button>
+                    <span id="statusText" class="status-message"></span>
+                </div>
+            </div>
+        </div>
+
+        <script src="pdf-tool/app.js"></script>
+    </body>
+</html>
