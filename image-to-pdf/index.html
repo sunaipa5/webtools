@@ -9,7 +9,7 @@
         <title>Image to PDF Converter</title>
         <link rel="icon" type="image/webp" href="/favicon.webp" />
         <link rel="stylesheet" href="../style.css" />
-        <script src="./jspdf.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
         <style>
             .controls-card {
                 background: var(--card-bg);
@@ -43,7 +43,8 @@
             }
 
             select,
-            input[type="range"] {
+            input[type="range"],
+            input[type="text"] {
                 width: 100%;
                 background: var(--entry-bg);
                 border: 1px solid rgba(255, 255, 255, 0.08);
@@ -55,7 +56,8 @@
                 transition: border-color 0.2s;
             }
 
-            select:focus {
+            select:focus,
+            input[type="text"]:focus {
                 border-color: var(--accent);
             }
 
@@ -253,6 +255,15 @@
             </header>
 
             <div class="controls-card">
+                <div class="form-group">
+                    <label for="fileName">PDF File Name</label>
+                    <input
+                        type="text"
+                        id="fileName"
+                        placeholder="converted_document"
+                    />
+                </div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label for="pageSize">Page Layout</label>
@@ -467,6 +478,16 @@
                     document.getElementById("imgQuality").value,
                 );
 
+                let rawFileName = document
+                    .getElementById("fileName")
+                    .value.trim();
+                if (!rawFileName) {
+                    rawFileName = "converted_document";
+                }
+                const outputFileName = rawFileName.endsWith(".pdf")
+                    ? rawFileName
+                    : `${rawFileName}.pdf`;
+
                 let pdf = null;
 
                 for (let i = 0; i < images.length; i++) {
@@ -542,7 +563,7 @@
                     }
                 }
 
-                pdf.save("converted_document.pdf");
+                pdf.save(outputFileName);
             }
         </script>
     </body>
